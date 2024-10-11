@@ -1,0 +1,36 @@
+- name: Install Docker using Chocolatey on Windows
+  hosts: windows_servers
+  gather_facts: yes
+  tasks:
+
+    - name: Ensure Chocolatey is installed
+      win_chocolatey:
+        name: chocolatey
+        state: present
+        source: https://chocolatey.org/api/v2/
+
+    - name: Install Docker using Chocolatey
+      win_chocolatey:
+        name: docker-desktop
+        state: present
+      register: docker_install
+      
+    - name: Debug PostgreSQL installation status
+      debug:
+        var: docker_install
+
+    - name: Ensure Docker Service is up and running
+      win_service:
+        name: "com.docker.service"
+        start_mode: auto
+        state: started
+
+    - name: Create the Docker group if it doesn't exist
+      ansible.windows.win_group:
+        name: docker
+        state: present
+
+    - name: Restart Docker service (optional)
+      win_service:
+        name: com.docker.service  # Adjust if needed based on your Docker installation
+        state: restarted

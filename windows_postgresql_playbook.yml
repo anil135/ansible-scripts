@@ -1,0 +1,22 @@
+- name: Install PostgreSQL on Windows EC2 Instance
+  hosts: windows_servers
+  tasks:
+
+    - name: Ensure Chocolatey is installed
+      win_chocolatey:
+        name: chocolatey
+        state: present
+        source: https://chocolatey.org/api/v2/
+
+
+    - name: Install PostgreSQL using Chocolatey
+      win_chocolatey:
+        name: postgresql
+        state: present
+      register: postgres_install
+
+    - name: Debug PostgreSQL installation status
+      debug:
+        var: postgres_install
+
+    

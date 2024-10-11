@@ -1,0 +1,12 @@
+---
+- name: Add Jenkins user to sudoers
+  hosts: ubuntu_servers  # Specify your target hosts or group
+  become: true              # Use privilege escalation to edit the sudoers file
+  tasks:
+      # adding jenkins user to sudoers file to do some installations while running the jobs
+    - name: Ensure the Jenkins user has NOPASSWD access in sudoers
+      lineinfile:
+        path: /etc/sudoers
+        line: 'jenkins ALL=(ALL) NOPASSWD: ALL'
+        validate: '/usr/sbin/visudo -cf %s'  # Validate the sudoers file for syntax errors
+        state: present

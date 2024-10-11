@@ -1,0 +1,46 @@
+---
+- name: Create User/DB/Table
+  hosts: ubuntu_servers
+  become: yes
+
+  tasks:
+    # to craete customer DB on postgresql
+    - name: Create a new PostgreSQL database 
+      community.postgresql.postgresql_db:
+        state: present
+        name: customer
+      become: true
+      become_method: sudo
+      become_user: postgres
+
+    - name: Create new postgresql User # to craete admin user to customer DB on postgresql
+      community.postgresql.postgresql_user:
+        db: customer
+        name: admin
+        password: admin123
+      become: true
+      become_method: sudo
+      become_user: postgres
+    
+    - name: Create a new table in postgresql # to crate a new emp_table
+      community.postgresql.postgresql_query:
+        db: customer
+        query: |
+          CREATE TABLE IF NOT EXISTS emp_table (
+            id BIGSERIAL PRIMARY KEY,
+            name TEXT,
+            emp_id TEXT,
+            city TEXT
+          );
+      become: true
+      become_method: sudo
+      become_user: postgres
+
+
+    - name: Insert data to a postgresql table #to insert data to emp table
+      postgresql_query:
+        db: customer
+        query: INSERT INTO emp_table (id, name, emp_id, city) VALUES (1, 'anil', 135, 'Hyderabad')
+      become: true
+      become_method: sudo
+      become_user: postgres

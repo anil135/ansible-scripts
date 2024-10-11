@@ -1,0 +1,69 @@
+---
+- name: Install Jenkins on Ubuntu server
+  hosts: ubuntu_servers
+  become: yes
+  tasks:
+    # Tasks to intall jenkins and print the jenkins status and admin password on terminal output
+    - name: apt update task
+      ansible.builtin.apt:
+        name: "*"
+        state: latest
+
+    - name: Install java  
+      ansible.builtin.apt:
+        name: openjdk-11-jdk
+        state: present
+
+    #- name: Import a key file from jenkins-cli
+
+    - name: to add jenkins repo
+      get_url:
+        url: https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+        dest: /usr/share/keyrings/jenkins-keyring.asc
+ 
+
+    - name: Add Jenkins repository
+      lineinfile:
+        path: /etc/apt/sources.list.d/jenkins.list
+        line: 'deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/'
+        create: yes
+
+    - name: Run the equivalent of "apt-get update" as a separate step
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Install Jenkins  
+      ansible.builtin.apt:
+        name: jenkins
+        state: present
+
+    - name: Start Jenkins service
+      systemd:
+        name: jenkins
+        enabled: yes
+        state: started
+
+    - name: Wait for Jenkins to start
+      wait_for:
+        port: 8080
+        delay: 10  # Wait for 10 seconds before checking
+        timeout: 60  # Wait for a maximum of 60 seconds
+
+
+    - name: Check Jenkins service status
+      command: systemctl status jenkins
+      register: jenkins_status
+
+    - name: Print jenkins status
+      debug:
+        msg: "Jenkins status: {{ jenkins_status.stdout }}"
+
+    - name: Get Admin password information
+      ansible.builtin.command: cat /var/lib/jenkins/secrets/initialAdminPassword
+      register: result
+      become: yes
+
+    - name: Print return information from the previous task
+      ansible.builtin.debug:
+        msg: "Jenkins Admin Password: {{ result.stdout }}"
+
